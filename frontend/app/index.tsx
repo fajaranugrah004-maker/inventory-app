@@ -57,6 +57,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -174,16 +175,19 @@ export default function Index() {
   };
 
   const handleDelete = (item: Item) => {
-    confirmDialog(
-      "Hapus Barang",
-      `Apakah Anda yakin ingin menghapus "${item.name}"?`,
-      async () => {
-        const newItems = items.filter((i) => i.id !== item.id);
-        setItems(newItems);
-        await saveItems(newItems);
-      },
-      "Hapus"
-    );
+    setDeleteTarget(item);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const newItems = items.filter((i) => i.id !== deleteTarget.id);
+    setItems(newItems);
+    await saveItems(newItems);
+    setDeleteTarget(null);
+  };
+
+  const cancelDelete = () => {
+    setDeleteTarget(null);
   };
 
   const renderItem = useCallback(
@@ -459,6 +463,48 @@ export default function Index() {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteTarget !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmBox} testID="delete-confirm-modal">
+            <View style={styles.confirmIconWrap}>
+              <Text style={styles.confirmIcon}>⚠️</Text>
+            </View>
+            <Text style={styles.confirmTitle}>Hapus Barang</Text>
+            <Text style={styles.confirmMessage}>
+              Apakah Anda yakin ingin menghapus{" "}
+              <Text style={styles.confirmBold}>
+                &quot;{deleteTarget?.name}&quot;
+              </Text>
+              ?
+            </Text>
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.confirmCancelBtn]}
+                onPress={cancelDelete}
+                testID="confirm-cancel-btn"
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmCancelText}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.confirmDeleteBtn]}
+                onPress={confirmDelete}
+                testID="confirm-delete-btn"
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmDeleteText}>Hapus</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -775,6 +821,82 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563eb",
   },
   saveBtnText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  // Delete confirmation modal styles
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  confirmBox: {
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+  },
+  confirmIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#fef2f2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  confirmIcon: {
+    fontSize: 32,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  confirmMessage: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  confirmBold: {
+    fontWeight: "600",
+    color: "#111827",
+  },
+  confirmActions: {
+    flexDirection: "row",
+    width: "100%",
+    gap: 10,
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  confirmCancelBtn: {
+    backgroundColor: "#f3f4f6",
+  },
+  confirmCancelText: {
+    color: "#374151",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  confirmDeleteBtn: {
+    backgroundColor: "#dc2626",
+  },
+  confirmDeleteText: {
     color: "#ffffff",
     fontSize: 15,
     fontWeight: "600",
