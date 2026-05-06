@@ -258,9 +258,9 @@ export default function Index() {
   const renderEmpty = () => (
     <View style={styles.emptyContainer} testID="empty-state">
       <Text style={styles.emptyIcon}>📦</Text>
-      <Text style={styles.emptyTitle}>Belum Ada Barang</Text>
+      <Text style={styles.emptyTitle}>Stok masih kosong</Text>
       <Text style={styles.emptySubtitle}>
-        Tekan tombol + di bawah untuk menambahkan barang pertama Anda
+        Yuk, mulai catat barang pertamamu dengan menekan tombol + di pojok kanan bawah
       </Text>
     </View>
   );
