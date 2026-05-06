@@ -13,6 +13,7 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -290,9 +291,11 @@ export default function Index() {
       {/* Header */}
       <View style={styles.header} testID="app-header">
         <View style={styles.headerTop}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>📦</Text>
-          </View>
+          <Image
+            source={require("../assets/images/icon.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.headerTitle}>Manajemen Stok</Text>
         </View>
 
@@ -543,6 +546,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginBottom: 18,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
   },
   logoBadge: {
     width: 36,

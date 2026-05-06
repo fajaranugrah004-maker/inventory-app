@@ -1,8 +1,26 @@
-# Welcome to your Expo app 👋
+# Aplikasi Inventaris Toko (Frontend)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikasi ini merupakan bagian frontend dari sistem manajemen inventaris toko berbasis mobile. Aplikasi digunakan untuk membantu pengguna dalam mengelola data barang secara sederhana.
 
-## Get started
+## Deskripsi
+
+Frontend dibangun menggunakan React Native dengan bantuan Expo. Aplikasi ini berfungsi sebagai antarmuka pengguna untuk melakukan operasi CRUD terhadap data barang.
+
+## Fitur Utama
+
+* Menampilkan daftar barang
+* Menambahkan barang baru
+* Mengubah data barang
+* Menghapus barang
+* Menampilkan total stok dan jumlah barang
+
+## Teknologi yang Digunakan
+
+* React Native
+* Expo
+* Fetch API (untuk komunikasi dengan backend)
+
+## Cara Menjalankan Aplikasi
 
 1. Install dependencies
 
@@ -10,41 +28,23 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Jalankan aplikasi
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Scan QR code menggunakan Expo Go di smartphone
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Keterangan
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Aplikasi ini terhubung dengan backend menggunakan FastAPI dan database MongoDB untuk menyimpan data barang.
 
-## Get a fresh project
+## Tujuan
 
-When you're ready, run:
+Aplikasi ini dibuat untuk memenuhi tugas pembuatan aplikasi mobile sederhana dengan implementasi proses bisnis CRUD.
 
-```bash
-npm run reset-project
-```
+## Pembuat
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Fajar Anugrah
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
