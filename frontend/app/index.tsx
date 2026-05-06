@@ -33,6 +33,25 @@ const formatRupiah = (value: string) => {
   return "Rp " + num.toLocaleString("id-ID");
 };
 
+// Cross-platform confirm dialog (web uses window.confirm, native uses Alert.alert)
+const confirmDialog = (
+  title: string,
+  message: string,
+  onConfirm: () => void,
+  confirmText: string = "Hapus"
+) => {
+  if (Platform.OS === "web") {
+    if (typeof window !== "undefined" && window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: "Batal", style: "cancel" },
+      { text: confirmText, style: "destructive", onPress: onConfirm },
+    ]);
+  }
+};
+
 export default function Index() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +63,7 @@ export default function Index() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Load items from AsyncStorage on mount
   useEffect(() => {
@@ -78,6 +98,7 @@ export default function Index() {
     setPrice("");
     setStock("");
     setEditingItem(null);
+    setErrors({});
   };
 
   const openAddModal = () => {
@@ -100,23 +121,21 @@ export default function Index() {
   };
 
   const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
     if (!name.trim()) {
-      Alert.alert("Validasi", "Nama barang tidak boleh kosong");
-      return false;
+      newErrors.name = "Nama barang tidak boleh kosong";
     }
     if (!category.trim()) {
-      Alert.alert("Validasi", "Kategori tidak boleh kosong");
-      return false;
+      newErrors.category = "Kategori tidak boleh kosong";
     }
     if (!price.trim() || isNaN(Number(price)) || Number(price) < 0) {
-      Alert.alert("Validasi", "Harga harus berupa angka valid");
-      return false;
+      newErrors.price = "Harga harus berupa angka valid";
     }
     if (!stock.trim() || isNaN(Number(stock)) || Number(stock) < 0) {
-      Alert.alert("Validasi", "Stok harus berupa angka valid");
-      return false;
+      newErrors.stock = "Stok harus berupa angka valid";
     }
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
@@ -155,21 +174,15 @@ export default function Index() {
   };
 
   const handleDelete = (item: Item) => {
-    Alert.alert(
+    confirmDialog(
       "Hapus Barang",
       `Apakah Anda yakin ingin menghapus "${item.name}"?`,
-      [
-        { text: "Batal", style: "cancel" },
-        {
-          text: "Hapus",
-          style: "destructive",
-          onPress: async () => {
-            const newItems = items.filter((i) => i.id !== item.id);
-            setItems(newItems);
-            await saveItems(newItems);
-          },
-        },
-      ]
+      async () => {
+        const newItems = items.filter((i) => i.id !== item.id);
+        setItems(newItems);
+        await saveItems(newItems);
+      },
+      "Hapus"
     );
   };
 
@@ -342,56 +355,85 @@ export default function Index() {
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Nama Barang *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.name && styles.inputError]}
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(t) => {
+                    setName(t);
+                    if (errors.name) setErrors({ ...errors, name: "" });
+                  }}
                   placeholder="Contoh: Indomie Goreng"
                   placeholderTextColor="#9ca3af"
                   testID="input-name"
                 />
+                {errors.name ? (
+                  <Text style={styles.errorText} testID="error-name">
+                    {errors.name}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Kategori *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.category && styles.inputError]}
                   value={category}
-                  onChangeText={setCategory}
+                  onChangeText={(t) => {
+                    setCategory(t);
+                    if (errors.category) setErrors({ ...errors, category: "" });
+                  }}
                   placeholder="Contoh: Makanan"
                   placeholderTextColor="#9ca3af"
                   testID="input-category"
                 />
+                {errors.category ? (
+                  <Text style={styles.errorText} testID="error-category">
+                    {errors.category}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Harga (Rp) *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.price && styles.inputError]}
                   value={price}
-                  onChangeText={(t) => setPrice(t.replace(/[^0-9]/g, ""))}
+                  onChangeText={(t) => {
+                    setPrice(t.replace(/[^0-9]/g, ""));
+                    if (errors.price) setErrors({ ...errors, price: "" });
+                  }}
                   placeholder="Contoh: 3500"
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   testID="input-price"
                 />
-                {price ? (
-                  <Text style={styles.helperText}>
-                    {formatRupiah(price)}
+                {errors.price ? (
+                  <Text style={styles.errorText} testID="error-price">
+                    {errors.price}
                   </Text>
+                ) : price ? (
+                  <Text style={styles.helperText}>{formatRupiah(price)}</Text>
                 ) : null}
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Jumlah Stok *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.stock && styles.inputError]}
                   value={stock}
-                  onChangeText={(t) => setStock(t.replace(/[^0-9]/g, ""))}
+                  onChangeText={(t) => {
+                    setStock(t.replace(/[^0-9]/g, ""));
+                    if (errors.stock) setErrors({ ...errors, stock: "" });
+                  }}
                   placeholder="Contoh: 50"
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   testID="input-stock"
                 />
+                {errors.stock ? (
+                  <Text style={styles.errorText} testID="error-stock">
+                    {errors.stock}
+                  </Text>
+                ) : null}
               </View>
             </ScrollView>
 
@@ -690,6 +732,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#111827",
     minHeight: 48,
+  },
+  inputError: {
+    borderColor: "#dc2626",
+    backgroundColor: "#fef2f2",
+  },
+  errorText: {
+    fontSize: 13,
+    color: "#dc2626",
+    marginTop: 6,
+    fontWeight: "500",
   },
   helperText: {
     fontSize: 13,
