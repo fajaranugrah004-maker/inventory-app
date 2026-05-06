@@ -10,49 +10,94 @@ from typing import List
 import uuid
 from datetime import datetime
 
-
+# ===================== CONFIG =====================
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
 app = FastAPI()
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-
-# Define Models
-class StatusCheck(BaseModel):
+# ===================== MODEL =====================
+class Item(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    name: str
+    price: float
+    stock: int
+    category: str = "umum"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+class ItemCreate(BaseModel):
+    name: str
+    price: float
+    stock: int
+    category: str = "umum"
 
-# Add your routes to the router instead of directly to app
+# ===================== ROUTES =====================
 @api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+async def home():
+    return {"message": "API Inventaris berjalan"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
+# CREATE
+@api_router.post("/items")
+async def add_item(item: ItemCreate):
+    if item.price <= 0:
+        return {"message": "Harga tidak valid"}
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+    if item.stock < 0:
+        return {"message": "Stok tidak boleh negatif"}
 
-# Include the router in the main app
+    data = item.dict()
+    new_item = Item(**data)
+
+    await db.items.insert_one(new_item.dict())
+
+    logger.info(f"Tambah item: {new_item.name}")
+
+    return {
+        "message": "Data berhasil ditambahkan",
+        "data": new_item
+    }
+
+# READ
+@api_router.get("/items")
+async def get_items():
+    items = await db.items.find().to_list(1000)
+    return items
+
+# UPDATE
+@api_router.put("/items/{item_id}")
+async def update_item(item_id: str, item: ItemCreate):
+    existing = await db.items.find_one({"id": item_id})
+
+    if not existing:
+        return {"message": "Data tidak ditemukan"}
+
+    await db.items.update_one(
+        {"id": item_id},
+        {"$set": item.dict()}
+    )
+
+    logger.info(f"Update item: {item_id}")
+
+    return {"message": "Data berhasil diupdate"}
+
+# DELETE
+@api_router.delete("/items/{item_id}")
+async def delete_item(item_id: str):
+    result = await db.items.delete_one({"id": item_id})
+
+    if result.deleted_count == 0:
+        return {"message": "Data tidak ditemukan"}
+
+    logger.info(f"Hapus item: {item_id}")
+
+    return {"message": "Data berhasil dihapus"}
+
+# ===================== SETUP =====================
 app.include_router(api_router)
 
 app.add_middleware(
@@ -63,11 +108,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
 logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
